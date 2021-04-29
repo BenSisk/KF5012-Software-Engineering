@@ -1,0 +1,1 @@
+pyuic5 -x -o user.py untitled.ui

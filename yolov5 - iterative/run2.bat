@@ -1,0 +1,1 @@
+python detect.py --source test.jpg --weights trained_models/models/raw.pt --conf 0.25
