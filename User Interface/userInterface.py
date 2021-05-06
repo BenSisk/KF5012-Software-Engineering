@@ -40,9 +40,6 @@ class Thread(QThread):
                     convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
                     p = convertToQtFormat.scaled(640, 640, Qt.KeepAspectRatio)
                     self.changePixmap.emit(p)
-            if (self.currentFrame >= self.frameCount - 1):
-                break
-        self.running = False
 
     def stop(self):
         self.terminate()
@@ -79,20 +76,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         th = Thread(self)
 
     def openFileDef(self):
-        self.th.stop()
         filename = QFileDialog.getOpenFileName(self, 'Open File', '',"Image or Video (*.jpg *.png *.mp4)")[0]
-        self.fileOpen(filename)
+        status = self.fileOpen(filename)
+        if (status == 0):
+            self.sourceText.setText(filename)
         
             
         
     def fileOpen(self, filename):
         if (filename != ""):
-            self.sourceText.setText(filename)
             splitFilename = filename.split(".")
             type = splitFilename[len(splitFilename) - 1]
 
             if (type == "mp4"):
                 #video
+                self.th.stop()
                 self.th.changePixmap.connect(self.setImage)
                 self.th.videoPath = filename
                 self.th.start()
@@ -104,16 +102,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 self.videoScrub.setRange(0, frameCount)
                 self.playPause.setText("Pause")
+                return 0
             elif (type == "jpg" or type == "png"):
                 #image
+                self.th.stop()
                 image_path = filename
                 self.show_frame_in_display(image_path)
                 self.videoScrub.setEnabled(False)
                 self.playPause.setEnabled(False)
                 self.videoScrub.setValue(0)
+                return 0
 
             else:
                 QMessageBox.about(self, "Error", "Invalid File Type")
+                return -1
         
     def show_frame_in_display(self,image_path):
         changePixmap = pyqtSignal(QImage)
@@ -130,6 +132,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return False
 
     def runTestDef(self):
+        self.th.stop()
         valid = True
         weightPath = self.weightText.text()
         conf = self.confText.text()
