@@ -1,1 +1,0 @@
-python detect.py --source test.jpg --weights trained_models/models/pre_more.pt --conf 0.25
